@@ -9,8 +9,9 @@
   "scripts": {
     "tsc": "tsc",
     "tsc:w": "tsc -w",
+    "tsc:r": "tsc -p tsconfig.release.json",
     "clean": "rimraf dist",
-    "prepublish": "tsc --declaration"
+    "prepare": "yarn clean && yarn tsc:r"
   },
   "devDependencies": {
     "@types/debug": "^4.1.4",
