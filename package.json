@@ -1,6 +1,6 @@
 {
   "name": "folder-shema",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "generate and validate folder shema",
   "main": "dist/index.js",
   "repository": "https://github.com/zhaochy1990/folder-schema",
