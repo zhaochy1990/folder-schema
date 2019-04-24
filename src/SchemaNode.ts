@@ -6,30 +6,36 @@ const debug = Debug('folder-schema:SchemaNode');
 
 export type NodeType = 'file' | 'directory' | 'link';
 
+export const PARENT_DIR = '${parent_dir}';
+export const ROOT_DIR = '${root_dir}';
+
 export class SchemaNode {
   public abspath: string;
   public type: NodeType;
   public name: string;
+  public parentDir: string;
   public children: SchemaNode[];
 
-  public handler: Stats;
-
-  constructor(abspath: string, handler: Stats) {
+  constructor(abspath: string, handler: Stats | NodeType) {
     this.abspath = abspath;
     this.name = path.basename(abspath);
+    this.parentDir = path.dirname(abspath);
 
-    this.handler = handler;
-    this.children = [];
-
-    if (handler.isDirectory()) {
-      this.type = 'directory';
-    } else if (handler.isFile()) {
-      this.type = 'file';
-    } else if (handler.isSymbolicLink()) {
-      this.type = 'link';
+    if (typeof handler === 'string') {
+      this.type = handler;
     } else {
-      throw new Error('Unsupported type');
+      if (handler.isDirectory()) {
+        this.type = 'directory';
+      } else if (handler.isFile()) {
+        this.type = 'file';
+      } else if (handler.isSymbolicLink()) {
+        this.type = 'link';
+      } else {
+        throw new Error('Unsupported type');
+      }
     }
+
+    this.children = [];
     debug('%s of type %s', this.name, this.type);
   }
 
@@ -38,16 +44,28 @@ export class SchemaNode {
       type: this.type,
       abspath: this.abspath,
       name: this.name,
-      // handler: this.handler,
       children: this.children.map((child: SchemaNode) => child.toJSON()),
     };
   }
 
   public addChild(child: SchemaNode) {
+    if (this.type !== 'directory') {
+      return;
+    }
     this.children.push(child);
+    return this;
   }
 
   public addChildren(children: SchemaNode[]) {
+    if (this.type !== 'directory') {
+      return;
+    }
+    children.forEach((child: SchemaNode) => {
+      child.abspath = path.join(this.abspath, child.name);
+      child.parentDir = this.abspath;
+      child.addChildren(child.children);
+    });
     this.children = this.children.concat(children);
+    return this;
   }
 }

@@ -2,7 +2,7 @@ import Debug from 'debug';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-import { SchemaNode } from './SchemaNode';
+import { SchemaNode, ROOT_DIR, PARENT_DIR } from './SchemaNode';
 
 const debug = Debug('folder-schema:FolderSchema');
 
@@ -45,5 +45,21 @@ export default class FolderSchema {
     schema.addChildren(childrenSchemas);
 
     return schema;
+  }
+
+  public static rootDir(baseDir?: string) {
+    let absPath: string = baseDir || ROOT_DIR;
+    if (!path.isAbsolute(absPath)) {
+      absPath = path.join(ROOT_DIR, absPath);
+    }
+    return new SchemaNode(absPath, 'directory');
+  }
+
+  public static dir(dirName: string) {
+    return new SchemaNode(path.join(PARENT_DIR, dirName), 'directory');
+  }
+
+  public static file(fileName: string) {
+    return new SchemaNode(path.join(PARENT_DIR, fileName), 'file');
   }
 }
