@@ -14,6 +14,10 @@ export interface CompareResult {
   reason?: string;
 }
 
+export interface CompareOptions {
+  strict?: boolean;
+}
+
 function checkArrayElementUnique(arr: SchemaNode[]) {
   const map: { [key: string]: SchemaNode } = {};
 
@@ -31,7 +35,9 @@ export class SchemaNode {
   public name: string;
   public parentDir: string;
   public children: SchemaNode[];
-  public ignoreChildren: boolean;
+
+  private ignoreChildren: boolean;
+  private _optional: boolean;
 
   constructor(abspath: string, handler: Stats | NodeType) {
     this.abspath = abspath;
@@ -53,6 +59,7 @@ export class SchemaNode {
     }
 
     this.ignoreChildren = false;
+    this._optional = false;
     this.children = [];
     debug('%s of type %s', this.name, this.type);
   }
@@ -99,6 +106,11 @@ export class SchemaNode {
     return this;
   }
 
+  public optional() {
+    this._optional = true;
+    return this;
+  }
+
   public updateRootDir(rootDir: string) {
     if (this.parentDir.includes(ROOT_DIR)) {
       debug('update root dir for %s', this.name);
@@ -118,8 +130,9 @@ export class SchemaNode {
    * Check if schema matched expected.
    *
    * @param expectedSchema
+   * @param options
    */
-  public equals(expectedSchema: SchemaNode): CompareResult {
+  public equals(expectedSchema: SchemaNode, options?: CompareOptions): CompareResult {
     debug('check if \n%j\nequals\n%j\n', this.toJSON(), expectedSchema.toJSON());
 
     if (this.name !== expectedSchema.name) {
@@ -147,10 +160,13 @@ export class SchemaNode {
       debug('%s ignore children', this.abspath);
       return {success: true};
     }
-    const unvisited = Array.from(expectedSchema.children);
+    let unvisited = Array.from(expectedSchema.children);
     for (const child of this.children) {
       const tChild = expectedSchema.children.find(c => c.name === child.name);
       if (!tChild) {
+        if (options && options.strict === false) {
+          continue;
+        }
         return {
           success: false,
           reason: `Unexpected ${child.type} ${child.abspath}`,
@@ -164,6 +180,9 @@ export class SchemaNode {
       const idx = unvisited.findIndex(c => c.name === child.name);
       unvisited.splice(idx, 1);
     }
+    // remove optional items
+    unvisited = unvisited.filter(r => !r._optional);
+
     if (unvisited.length === 0) {
       return {success: true};
     }

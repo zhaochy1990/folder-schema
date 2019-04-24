@@ -2,7 +2,7 @@ import Debug from 'debug';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-import { SchemaNode, ROOT_DIR, PARENT_DIR } from './SchemaNode';
+import {SchemaNode, ROOT_DIR, PARENT_DIR, CompareOptions} from './SchemaNode';
 
 const debug = Debug('folder-schema:FolderSchema');
 
@@ -65,11 +65,12 @@ export default class FolderSchema {
 
   /**
    * validate a folder with a schema definition
-   * 
+   *
    * @param folderpath the folder to validate
    * @param schema the folder schema
+   * @param options
    */
-  public static async validate(folderpath: string, schema: SchemaNode) {
+  public static async validate(folderpath: string, schema: SchemaNode, options: CompareOptions) {
     const targetSchema = await this.parse(folderpath);
     if (targetSchema.type !== 'directory') {
       throw new Error(`Expect ${folderpath} to be a folder`);
@@ -77,6 +78,6 @@ export default class FolderSchema {
     debug('Update schema root dir to %s', targetSchema.parentDir);
     schema.updateRootDir(targetSchema.parentDir);
 
-    return targetSchema.equals(schema);
+    return targetSchema.equals(schema, options);
   }
 }
