@@ -69,8 +69,14 @@ export default class FolderSchema {
    * @param folderpath the folder to validate
    * @param schema the folder schema
    */
-  public static validate(folderpath: string, schema: SchemaNode) {
-    const targetSchema = this.parse(folderpath);
-    // TODO:
+  public static async validate(folderpath: string, schema: SchemaNode) {
+    const targetSchema = await this.parse(folderpath);
+    if (targetSchema.type !== 'directory') {
+      throw new Error(`Expect ${folderpath} to be a folder`);
+    }
+    debug('Update schema root dir to %s', targetSchema.parentDir);
+    schema.updateRootDir(targetSchema.parentDir);
+
+    return targetSchema.equals(schema);
   }
 }
