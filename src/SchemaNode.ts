@@ -1,4 +1,4 @@
-import { Stats } from "fs";
+import {Stats} from 'fs';
 import * as path from 'path';
 import Debug from 'debug';
 
@@ -12,6 +12,17 @@ export const ROOT_DIR = '${root_dir}';
 export interface CompareResult {
   success: boolean;
   reason?: string;
+}
+
+function checkArrayElementUnique(arr: SchemaNode[]) {
+  const map: { [key: string]: SchemaNode } = {};
+
+  for (let i = 0, size = arr.length; i < size; i++) {
+    if (map[arr[i].name + arr[i].type]) {
+      throw new Error(`Duplicated ${arr[i].type} ${arr[i].name} found`);
+    }
+    map[arr[i].name + arr[i].type] = arr[i];
+  }
 }
 
 export class SchemaNode {
@@ -67,12 +78,9 @@ export class SchemaNode {
     if (this.type !== 'directory') {
       return;
     }
+    checkArrayElementUnique(children);
     debug('add children %j', children);
     children.forEach((child: SchemaNode) => {
-      if (children.find(c => c.name === child.name && c.type === child.type)) {
-        throw new Error(`Can not add duplicated child ${child.name}`);
-      }
-
       child.abspath = path.join(this.abspath, child.name);
       child.parentDir = this.abspath;
       const childChildren = child.children;
@@ -137,7 +145,7 @@ export class SchemaNode {
 
     if (expectedSchema.ignoreChildren) {
       debug('%s ignore children', this.abspath);
-      return { success: true };
+      return {success: true};
     }
     const unvisited = Array.from(expectedSchema.children);
     for (const child of this.children) {
@@ -157,7 +165,7 @@ export class SchemaNode {
       unvisited.splice(idx, 1);
     }
     if (unvisited.length === 0) {
-      return { success: true };
+      return {success: true};
     }
     // can not found some folder/file from file system
     const reasons = unvisited.map(r => `Can not find ${r.type} ${r.abspath}`);
