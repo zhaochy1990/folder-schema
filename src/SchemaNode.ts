@@ -68,4 +68,19 @@ export class SchemaNode {
     this.children = this.children.concat(children);
     return this;
   }
+
+  public updateRootDir(rootDir: string) {
+    if (this.parentDir.includes(ROOT_DIR)) {
+      debug('update root dir for %s', this.name);
+      let newRootDir = rootDir;
+      if (!path.isAbsolute(rootDir)) {
+        newRootDir = path.resolve(process.cwd(), newRootDir);
+      }
+      this.parentDir = this.parentDir.replace(ROOT_DIR, rootDir);
+      this.abspath = this.abspath.replace(ROOT_DIR, rootDir);
+      this.children.forEach((child) => {
+        child.updateRootDir(newRootDir);
+      })
+    }
+  }
 }

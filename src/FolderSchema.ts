@@ -62,4 +62,15 @@ export default class FolderSchema {
   public static file(fileName: string) {
     return new SchemaNode(path.join(PARENT_DIR, fileName), 'file');
   }
+
+  /**
+   * validate a folder with a schema definition
+   * 
+   * @param folderpath the folder to validate
+   * @param schema the folder schema
+   */
+  public static validate(folderpath: string, schema: SchemaNode) {
+    const targetSchema = this.parse(folderpath);
+    // TODO:
+  }
 }
