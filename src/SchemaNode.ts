@@ -172,7 +172,7 @@ export class SchemaNode {
           reason: `Unexpected ${child.type} ${child.abspath}`,
         }
       }
-      const isMatch = child.equals(tChild);
+      const isMatch = child.equals(tChild, options);
       if (!isMatch.success) {
         return isMatch;
       }
